@@ -37,14 +37,19 @@ target of the Makefile in the icestorm directory to match your own hardware.
 
 ## CPU coding
 
-By default the build system fills the ROM with code based on the C and assembly
-source in the cc65 directory. Optionally you can use pure assembly to create
-the ROM with the following commands
+The build system fills the ROM with code based on the C and assembly
+source in the cc65 directory. This is automatically built when running make
+within the icestorm directory, but you can also enter the cc65 directory to 
+work on the ROM code.
 
-	make assembly
+	cd cc65
 	make
 
-within the icestorm directory. 
+Note that the files "fpga.inc" and "fpga.h" contain assembly and C definitions
+of the FPGA I/O resources and need to be kept in sync with the verilog design
+by hand at the moment. The linker configuration file "sbc.cfg" contains the
+RAM and ROM memory map. More detail about how all this fits together can be
+found on the cc65 website.
 
 ## Simulating
 
