@@ -102,7 +102,7 @@ module acia(
 	wire recv_error;
 	assign status = 
 	{
-		1'b0,				// bit 7 = irq - forced inactive
+		irq,				// bit 7 = irq - forced inactive
 		1'b0,				// bit 6 = parity error - unused
 		recv_error,			// bit 5 = overrun error - same as all errors
 		recv_error,			// bit 4 = framing error - same as all errors

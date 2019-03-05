@@ -24,7 +24,8 @@ _nmi_int:  RTI                    ; Return from all NMI interrupts
 ; ---------------------------------------------------------------------------
 ; Maskable interrupt (IRQ) service routine
 
-_irq_int:  PHA                    ; Save accumulator contents to stack
+_irq_int:           
+           PHA                    ; Save accumulator contents to stack
            TXA                    ; Save X register contents to stack
            PHA
 		   TYA                    ; Save Y register to stack
@@ -44,7 +45,7 @@ _irq_int:  PHA                    ; Save accumulator contents to stack
 ; Echo RX char
            JSR _acia_rx_chr       ; get RX char
            JSR _acia_tx_chr       ; send TX char
-		   
+
 ; ---------------------------------------------------------------------------
 ; IRQ detected, return
 

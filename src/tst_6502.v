@@ -9,7 +9,9 @@ module tst_6502(
 	input [7:0] gpio_i,
 	
 	input RX,				// serial RX
-	output TX				// serial TX
+	output TX,				// serial TX
+    
+    output CPU_IRQ          // diagnostic
 );
     // The 6502
     wire [15:0] CPU_AB;

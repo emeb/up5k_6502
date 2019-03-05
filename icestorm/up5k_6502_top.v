@@ -14,6 +14,7 @@ module up5k_6502_top(
     // diagnostics
     output tst_rst,
     output tst_clk,
+    output tst_irq,
 	
 	// LED
 	output RGB0, RGB1, RGB2 // RGB LED outs
@@ -64,7 +65,9 @@ module up5k_6502_top(
 		.gpio_i(gpio_i),
     
         .RX(RX),
-        .TX(TX)
+        .TX(TX),
+    
+        .CPU_IRQ(tst_irq)
 	);
     
 	// RGB LED Driver from top 3 bits of gpio
