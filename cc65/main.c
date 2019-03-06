@@ -15,12 +15,13 @@ int rx_chr;
 
 int main()
 {
-	//  Send startup message
-	acia_tx_str(msg);
-	
-	// enable ACIA IRQ
-	ACIA_CTRL = 0x80;
+	// enable ACIA RX IRQ
+	acia_rx_irq_ena(1);
 	asm("CLI");
+	
+	// Send startup message
+	acia_tx_str(msg);
+	//acia_puts(msg);
 	
     // Run forever
     while(1)
@@ -37,7 +38,7 @@ int main()
 		
 		// handle serial echo
 		if((rx_chr = acia_getc()) != EOF)
-			acia_tx_chr(rx_chr);
+			acia_putc(rx_chr);
     }
 
     //  We should never get here!

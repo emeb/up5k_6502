@@ -14,18 +14,60 @@
 // ACIA buffers
 char tx_buffer[ACIA_BUFSZ], rx_buffer[ACIA_BUFSZ];
 unsigned char tx_wptr = 0, tx_rptr = 0, tx_n = 0,
-				rx_wptr = 0, rx_rptr = 0, rx_n = 0, c;
+				rx_wptr = 0, rx_rptr = 0, rx_n = 0,
+				acia_ctrl_shadow = 0;
+
+/*
+ * set/clear ACIA master reset
+ */
+void acia_reset(unsigned char state)
+{
+	if(state)
+		acia_ctrl_shadow |= ACIA_CTRL_CDIVSEL_MR;
+	else
+		acia_ctrl_shadow &= ~ACIA_CTRL_CDIVSEL_MASK;
+	
+	ACIA_CTRL = acia_ctrl_shadow;
+}
+
+/*
+ * set/clear ACIA TX IRQ enable
+ */
+void acia_tx_irq_ena(unsigned char state)
+{
+	if(state)
+		acia_ctrl_shadow |= ACIA_CTRL_TXIE_ENA;
+	else
+		acia_ctrl_shadow &= ~ACIA_CTRL_TXIE_MASK;
+	
+	ACIA_CTRL = acia_ctrl_shadow;
+}
+
+/*
+ * set/clear ACIA RX IRQ enable
+ */
+void acia_rx_irq_ena(unsigned char state)
+{
+	if(state)
+		acia_ctrl_shadow |= ACIA_CTRL_RXIE_ENA;
+	else
+		acia_ctrl_shadow &= ~ACIA_CTRL_RXIE_MASK;
+	
+	ACIA_CTRL = acia_ctrl_shadow;
+}
 
 /*
  * ACIA handler called from the global ISR
  */
 void acia_irq_handler(void)
 {
-	// check for RX data
-	if(ACIA_CTRL & ACIA_CTRL_RXF)
+	unsigned char c;
+	
+	// check for RX data full
+	if(ACIA_STAT & ACIA_STAT_RXF)
 	{
-		// get rx data
-		c = acia_rx_chr();
+		// get rx data regardless
+		c = ACIA_DATA;
 		
 		// check if there's room in the buffer
 		if(rx_n <= ACIA_BUFSZ)
@@ -34,6 +76,32 @@ void acia_irq_handler(void)
 			rx_buffer[rx_wptr] = c;
 			rx_wptr = (rx_wptr+1)&ACIA_BUFMASK;
 			++rx_n;
+		}
+	}
+	
+	// check for TX data empty
+	if(ACIA_STAT & ACIA_STAT_TXE)
+	{
+		// check for TX data
+		if(tx_n)
+		{
+			// send character
+			ACIA_DATA = tx_buffer[tx_rptr];
+			
+			// update pointer w/ wrap
+			tx_rptr = (tx_rptr+1)&ACIA_BUFMASK;
+			
+			// update counter
+			--tx_n;
+			
+			// if buffer empty then disable TX IRQ
+			if(!tx_n)
+				acia_tx_irq_ena(0);
+		}
+		else
+		{
+			// no data remaining so disable TX IRQ
+			acia_tx_irq_ena(0);
 		}
 	}
 }
@@ -61,4 +129,37 @@ int acia_getc(void)
 		result = EOF;
 	
 	return result;
+}
+
+/*
+ * put a character in the TX buffer
+ */
+void acia_putc(char c)
+{
+	// block until there's room in the buffer
+    while(tx_n >= ACIA_BUFSZ) {}
+	
+	// put char in buffer
+	tx_buffer[tx_wptr] = c;
+	
+	// update count and pointer atomically
+	asm("SEI");		// disable IRQ
+	tx_wptr = (tx_wptr+1)&ACIA_BUFMASK;
+	++tx_n;
+	
+	// enable TX IRQ if buffer not empty
+	if(tx_n)
+		acia_tx_irq_ena(1);
+	asm("CLI");		// enable IRQ
+}
+
+/*
+ * put a string to the TX buffer
+ */
+void acia_puts(char *str)
+{
+	char c;
+	
+	while((c=*str++))
+		acia_putc(c);
 }
