@@ -20,8 +20,7 @@ int main()
 	asm("CLI");
 	
 	// Send startup message
-	acia_tx_str(msg);
-	//acia_puts(msg);
+	acia_puts(msg);
 	
     // Run forever
     while(1)

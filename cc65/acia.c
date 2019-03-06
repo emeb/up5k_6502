@@ -158,8 +158,21 @@ void acia_putc(char c)
  */
 void acia_puts(char *str)
 {
-	char c;
+	char x=0, c;
 	
-	while((c=*str++))
-		acia_putc(c);
+	// loop over null terminated string 255 max
+	// note - using pointer dereferencing or postincrement breaks this
+	while(x<255)
+	{
+		// get next char
+		c = str[x];
+		++x;	// had to do this here - bugs in cc65?
+		
+		// break if null
+		if(c==0)
+			break;
+		
+		// send char
+		acia_putc(c);		
+	}
 }
