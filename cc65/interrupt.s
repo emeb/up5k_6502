@@ -9,7 +9,7 @@
 ;
 ; Checks for a BRK instruction, handles ACIA RX
 
-.import   _acia_rx_chr, _acia_tx_chr, _acia_int
+.import   _acia_rx_chr, _acia_tx_chr, _acia_irq_handler
 .export   _irq_int, _nmi_int
 
 .include  "fpga.inc"
@@ -40,7 +40,7 @@ _irq_int:
            LDA ACIA_CTRL
            AND #$80               ; IRQ bit set?
            BEQ irq                ; no - skip
-		   JSR _acia_int		  ; serial IRQ handler
+		   JSR _acia_irq_handler  ; serial IRQ handler
 		   
 ; ---------------------------------------------------------------------------
 ; IRQ detected, return
