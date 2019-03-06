@@ -7,5 +7,7 @@
 #define __ACIA__
 
 extern void __fastcall__ acia_tx_str (char *str);
+extern void __fastcall__ acia_tx_chr (char c);
+extern char __fastcall__ acia_rx_chr (void);
 
 #endif
