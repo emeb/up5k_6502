@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "fpga.h"
 #include "acia.h"
+#include "cmd.h"
 
 char *msg = "\n\n\rup5k 6502 cc65 serial test\n\n\r";
 unsigned long cnt;
@@ -22,6 +23,9 @@ int main()
 	// Send startup message
 	acia_puts(msg);
 	
+	// initialize and print prompt
+	cmd_init();
+	
     // Run forever
     while(1)
     {
@@ -33,11 +37,10 @@ int main()
 		
         // write counter msbyte to GPIO
         GPIO_DATA = x;
-        x++;
+        ++x;
 		
-		// handle serial echo
-		if((rx_chr = acia_getc()) != EOF)
-			acia_putc(rx_chr);
+		// process commands
+		cmd_do();
     }
 
     //  We should never get here!
