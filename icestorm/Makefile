@@ -60,7 +60,7 @@ $(REAL_HEX):
 
 recode:
 	rm -f $(REAL_HEX) $(PROJ).bin
-	make prog
+	$(MAKE) prog
     
 prog: $(PROJ).bin
 	$(CDCPROG) -p /dev/ttyACM0 $<
@@ -73,7 +73,7 @@ lint: $(SRC)
 	$(VERILATOR) --lint-only -Wall --top-module $(PROJ) $(TECH_LIB) $(SRC)
 
 clean:
-	rm -f $(PROJ).json $(PROJ).asc $(PROJ).rpt $(PROJ).bin *.hex
+	rm -f *.json *.asc *.rpt *.bin *.hex
 	$(MAKE) clean -C ../cc65/
 
 .SECONDARY:
