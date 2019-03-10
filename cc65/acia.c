@@ -57,6 +57,10 @@ void acia_rx_irq_ena(unsigned char state)
 }
 
 /*
+ * C code for RX/TX circular buffers - unused since ISR is in assy only
+ */
+#if 0
+/*
  * ACIA handler called from the global ISR
  */
 void acia_irq_handler(void)
@@ -105,6 +109,7 @@ void acia_irq_handler(void)
 		}
 	}
 }
+#endif
 
 /*
  * get a character from the RX buffer
