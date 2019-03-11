@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "cmd.h"
 #include "acia.h"
@@ -11,59 +12,16 @@
 #define MAX_CMD_LEN 128
 #define MAX_ARGS 4
 
-char cmd_buff[MAX_CMD_LEN];
-unsigned char cmd_widx;
-static char* Last = 0;
-
-/*
- * try local tokenizer
- */
-char* my_strtok (char* s1, const char s2)
+const char *cmd_commands[] =
 {
-    char c;
-    char* start;
+	"help",
+	"peek",
+	"poke",
+	""
+};
 
-    /* Use the stored location if called with a NULL pointer */
-    if (s1 == 0) {
-        s1 = Last;
-    }
-
-    /* If s1 is empty, there are no more tokens. Return 0 in this case. */
-    if (*s1 == '\0') {
-        return 0;
-    }
-
-    /* Search the address of the first element in s1 that equals none
-    ** of the characters in s2.
-    */
-    while ((c = *s1) && (c == s2)) {
-        ++s1;
-    }
-    if (c == '\0') {
-        /* No more tokens found */
-        Last = s1;
-        return 0;
-    }
-
-    /* Remember the start of the token */
-    start = s1;
-
-    /* Search for the end of the token */
-    while ((c = *s1) && (c != s2)) {
-        ++s1;
-    }
-    if (c == '\0') {
-        /* Last element */
-        Last = s1;
-    } else {
-        *s1 = '\0';
-        Last = s1 + 1;
-    }
-
-    /* Return the start of the token */
-    return start;
-}
-
+char cmd_buff[MAX_CMD_LEN], text_buffer[80];
+unsigned char cmd_widx;
 
 /*
  * emit the command prompt
@@ -80,12 +38,9 @@ void cmd_prompt(void)
 void cmd_parse(void)
 {
 	char *token, *argv[MAX_ARGS];
-	int argc;
-
-	// debugging
-	acia_puts(" ->");
-	acia_puts(cmd_buff);
-	acia_puts("\n\r");
+	int argc, cmd;
+	unsigned int addr;
+	unsigned char data;
 	
 	// parse out three tokens: cmd arg arg
 	argc = 0;
@@ -93,16 +48,82 @@ void cmd_parse(void)
 	while((token != NULL) && (argc < MAX_ARGS))
 	{
 		argv[argc] = token;
-		
-		// debugging
-		acia_putc(argc + '0');
-		acia_puts(" ->");
-		acia_puts(token);
-		acia_puts("\n\r");
-
 		++argc;
 		token = strtok(NULL, " ");
 	}
+	
+	/* figure out which command it is */
+	if(argc > 0)
+	{
+		cmd = 0;
+		while(cmd_commands[cmd] != '\0')
+		{
+			if(strcmp(argv[0], cmd_commands[cmd])==0)
+				break;
+			cmd++;
+		}
+
+		/* Can we handle this? */
+		if(cmd_commands[cmd] != '\0')
+		{
+			acia_puts("\r\n");
+
+			/* Handle commands */
+			switch(cmd)
+			{
+				case 0:		/* help */
+					acia_puts("help - this message\r\n");
+					acia_puts("peek <addr> - get value @ <addr> offset\r\n");
+					acia_puts("poke <addr> <data> - set register value @ <addr> offset to <data>\r\n");
+					break;
+
+				case 1:		/* peek */
+					if(argc < 2)
+						acia_puts("missing arg\r\n");
+					else
+					{
+						addr = atoi(argv[1]);
+						//sprintf(text_buffer,"peek: 0x%04X = 0x%02X\r\n", addr, (unsigned char)(*(unsigned char *)addr));
+						//acia_puts(text_buffer);
+						acia_puts("peek: 0x");
+						utoa(addr, text_buffer, 16);
+						acia_puts(text_buffer);
+						acia_puts(" = 0x");
+						utoa((unsigned char)(*(unsigned char *)addr), text_buffer, 16);
+						acia_puts(text_buffer);
+						acia_puts("\n\r");
+					}
+					break;
+
+				case 2:		/* poke */
+					if(argc < 3)
+						acia_puts("missing arg(s)\r\n");
+					else
+					{
+						addr = atoi(argv[1]);
+						data = atoi(argv[2]);
+						(unsigned char)(*(unsigned char *)addr) = data;
+						//sprintf(text_buffer,"poke: 0x%04X, 0x%02X\r\n", addr, data);
+						//acia_puts(text_buffer);
+						acia_puts("poke: 0x");
+						utoa(addr, text_buffer, 16);
+						acia_puts(text_buffer);
+						acia_puts(", 0x");
+						utoa(data, text_buffer, 16);
+						acia_puts(text_buffer);
+						acia_puts("\n\r");
+					}
+					break;
+
+				default:	/* shouldn't get here */
+					break;
+			}
+		}
+		else
+		{
+			acia_puts("err\r\n");
+		}
+	}	
 }
 
 /*

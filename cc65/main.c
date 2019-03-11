@@ -12,7 +12,6 @@
 char *msg = "\n\n\rup5k 6502 cc65 serial test\n\n\r";
 unsigned long cnt;
 unsigned char x = 0;
-int rx_chr;
 
 int main()
 {
